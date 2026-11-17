@@ -1,0 +1,36 @@
+{
+  "name": "EirinSec",
+  "tagline": "Équipe CTF francophone · on casse des trucs, on écrit des writeups.",
+  "about": "On est une team de passionnés de sécu qui participe à des CTF en ligne et en présentiel. On joue sur toutes les catégories et on partage nos solutions ici.",
+  "join": "Tu veux jouer avec nous ou nous contacter ? Passe sur le Discord.",
+  "discord": "https://discord.gg/xxxxxxx",
+  "ctftime": "https://ctftime.org/team/00000",
+  "categories": ["web", "pwn", "crypto", "reverse", "forensics", "osint", "misc"],
+  "socials": {
+    "Discord": "https://discord.gg/xxxxxxx",
+    "GitHub": "https://github.com/EirinSan"
+  },
+  "members": [
+    {
+      "name": "EirinSan",
+      "role": "Capitaine",
+      "specialties": ["web", "osint"],
+      "avatar": "",
+      "links": { "github": "https://github.com/EirinSan" }
+    },
+    {
+      "name": "membre2",
+      "role": "Pwn / Reverse",
+      "specialties": ["pwn", "reverse"],
+      "avatar": "",
+      "links": {}
+    },
+    {
+      "name": "membre3",
+      "role": "Crypto",
+      "specialties": ["crypto", "misc"],
+      "avatar": "",
+      "links": {}
+    }
+  ]
+}

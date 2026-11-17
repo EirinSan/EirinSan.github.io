@@ -11,19 +11,22 @@ function esc(s) {
 
 async function load(path) {
   const res = await fetch(path, { cache: "no-cache" });
-  if (!res.ok) throw new Error(`${path}: ${res.status}`);
+  if (!res.ok) throw new Error(`${path} introuvable (${res.status})`);
   return res.json();
 }
 
-function fmtDate(d) {
-  if (!d) return "";
+// dates au format ISO, comme dans un terminal
+function iso(d) {
   const date = new Date(d);
-  if (isNaN(date)) return esc(d);
-  return date.toLocaleDateString("fr-FR", { year: "numeric", month: "short", day: "numeric" });
+  return isNaN(date) ? esc(d) : date.toISOString().slice(0, 10);
 }
 
 function ordinal(n) {
   return n === 1 ? "1er" : `${n}e`;
+}
+
+function link(url, label) {
+  return `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>`;
 }
 
 function fillTeam(team) {
@@ -31,83 +34,77 @@ function fillTeam(team) {
     const v = team[el.dataset.team];
     if (v) el.textContent = v;
   });
-  if (team.name) {
-    document.title = document.title === "Writeup" ? document.title : team.name;
-  }
-  $("#year").textContent = new Date().getFullYear();
+  const updated = new Date(document.lastModified);
+  if (!isNaN(updated)) $("#updated").textContent = updated.toISOString().slice(0, 10);
 }
 
 function renderHome(team, ctfs, writeups) {
-  const discord = $("#discord-link");
-  if (team.discord) discord.href = team.discord; else discord.remove();
-  const ctftime = $("#ctftime-link");
-  if (team.ctftime) ctftime.href = team.ctftime; else ctftime.remove();
+  $("#categories").textContent = (team.categories || []).join(", ");
 
-  $("#categories").innerHTML = (team.categories || [])
-    .map((c) => `<span class="tag">${esc(c)}</span>`).join("");
-
-  // members
+  // AUTEURS
   $("#member-list").innerHTML = (team.members || []).map((m) => {
-    const avatar = m.avatar
-      ? `<img class="avatar" src="${esc(m.avatar)}" alt="">`
-      : `<div class="avatar">${esc((m.name || "?")[0].toUpperCase())}</div>`;
-    const links = Object.entries(m.links || {})
-      .map(([k, url]) => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(k)}</a>`).join("");
+    const links = Object.entries(m.links || {}).map(([k, url]) => link(url, k)).join(", ");
+    const spe = (m.specialties || []).join(", ");
     return `
-      <div class="card">
-        <div class="member-head">${avatar}
-          <div><div class="member-name">${esc(m.name)}</div><div class="member-role">${esc(m.role)}</div></div>
-        </div>
-        <div class="tags">${(m.specialties || []).map((s) => `<span class="tag">${esc(s)}</span>`).join("")}</div>
-        ${links ? `<div class="links">${links}</div>` : ""}
-      </div>`;
+      <dt>${esc(m.name)}</dt>
+      <dd>${esc(m.role)}${spe ? `. Surtout ${esc(spe)}.` : ""}${links ? ` <span class="dim">(${links})</span>` : ""}</dd>`;
   }).join("");
 
-  // results
+  // HISTORIQUE
   const sorted = [...ctfs].sort((a, b) => new Date(b.date) - new Date(a.date));
-  $("#result-list").innerHTML = sorted.map((c) => `
-    <tr>
-      <td>${fmtDate(c.date)}</td>
-      <td>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)}</a>` : esc(c.name)}</td>
-      <td class="place ${c.place <= 3 ? "podium" : ""}">${c.place ? ordinal(c.place) : "-"}${c.total ? ` / ${c.total}` : ""}</td>
-      <td>${esc(c.points ?? "-")}</td>
-    </tr>`).join("") || `<tr><td colspan="4" class="muted">Aucun CTF pour l'instant.</td></tr>`;
+  $("#results").innerHTML = sorted.length
+    ? `<div class="scroll"><table>
+        <thead><tr><th>date</th><th>ctf</th><th>place</th><th>pts</th></tr></thead>
+        <tbody>${sorted.map((c) => `
+          <tr>
+            <td>${iso(c.date)}</td>
+            <td>${c.url ? link(c.url, c.name) : esc(c.name)}</td>
+            <td>${c.place ? ordinal(c.place) : "-"}${c.total ? `<span class="dim">/${esc(c.total)}</span>` : ""}</td>
+            <td>${esc(c.points ?? "-")}</td>
+          </tr>`).join("")}</tbody></table></div>`
+    : `<p>Pas encore de résultat ici. Le premier CTF arrive bientôt, et tout ce qu'on joue se retrouve aussi sur ${team.ctftime ? link(team.ctftime, "CTFtime") : "CTFtime"}.</p>`;
 
-  // stats
-  $("#stat-ctfs").textContent = ctfs.length;
-  $("#stat-members").textContent = (team.members || []).length;
-  $("#stat-writeups").textContent = writeups.length;
-  const best = ctfs.filter((c) => c.place).sort((a, b) => a.place - b.place)[0];
-  $("#stat-best").textContent = best ? ordinal(best.place) : "-";
-
-  // writeups + filters
+  // FICHIERS (writeups façon ls -l)
   const cats = ["tout", ...new Set(writeups.map((w) => w.category).filter(Boolean))];
   let current = "tout";
-  const drawList = () => {
+  const draw = () => {
     const items = [...writeups]
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .filter((w) => current === "tout" || w.category === current);
-    $("#writeup-list").innerHTML = items.map((w) => `
-      <a class="writeup-item" href="writeup.html?id=${encodeURIComponent(w.id)}">
-        <span><span class="title">${esc(w.title)}</span> <span class="meta">· ${esc(w.ctf)}</span></span>
-        <span class="meta">${esc(w.category)} · ${esc(w.author)} · ${fmtDate(w.date)}</span>
-      </a>`).join("") || `<p class="muted">Aucun writeup pour l'instant.</p>`;
+    const authorW = Math.max(0, ...items.map((w) => (w.author || "").length));
+    const catW = Math.max(0, ...items.map((w) => (w.category || "").length));
+    const rows = items.map((w) =>
+      `<div class="row"><span class="dim">-rw-r--r--</span> ${esc((w.author || "").padEnd(authorW))} ${esc((w.category || "").padEnd(catW))} ${iso(w.date)} <a href="writeup.html?id=${encodeURIComponent(w.id)}">${esc(w.id)}.md</a>  <span class="dim">${esc(w.ctf)}</span></div>`);
+    $("#writeup-list").innerHTML =
+      `<div class="row dim">total ${items.length}</div>${rows.join("")}`;
   };
-  $("#writeup-filters").innerHTML = cats
-    .map((c) => `<button data-cat="${esc(c)}" class="${c === current ? "active" : ""}">${esc(c)}</button>`).join("");
-  $("#writeup-filters").addEventListener("click", (e) => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
-    current = btn.dataset.cat;
-    document.querySelectorAll("#writeup-filters button")
-      .forEach((b) => b.classList.toggle("active", b === btn));
-    drawList();
-  });
-  drawList();
+  if (cats.length > 2) {
+    $("#writeup-filters").innerHTML = "filtrer : " + cats
+      .map((c) => `<button type="button" data-cat="${esc(c)}" aria-pressed="${c === current}">${esc(c)}</button>`)
+      .join(" / ");
+    $("#writeup-filters").addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      current = btn.dataset.cat;
+      document.querySelectorAll("#writeup-filters button")
+        .forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+      draw();
+    });
+  }
+  draw();
+  if (!writeups.length) {
+    $("#writeup-list").insertAdjacentHTML("afterend",
+      `<p class="dim">Vide pour l'instant. Les premiers writeups arrivent après notre prochain CTF.</p>`);
+  }
 
-  // socials
-  $("#socials").innerHTML = Object.entries(team.socials || {})
-    .map(([k, url]) => `<a class="btn ghost" href="${esc(url)}" target="_blank" rel="noopener">${esc(k)}</a>`).join("");
+  // VOIR AUSSI
+  const see = [];
+  if (team.ctftime) see.push(link(team.ctftime, "ctftime(1)"));
+  if (team.discord) see.push(link(team.discord, "discord(1)"));
+  Object.entries(team.socials || {}).forEach(([k, url]) => {
+    if (url !== team.ctftime && url !== team.discord) see.push(link(url, `${k.toLowerCase()}(1)`));
+  });
+  $("#see-also").innerHTML = see.join(", ");
 }
 
 async function renderWriteup(writeups) {
@@ -115,22 +112,21 @@ async function renderWriteup(writeups) {
   const id = new URLSearchParams(location.search).get("id");
   const w = writeups.find((x) => x.id === id);
   if (!w) {
-    el.innerHTML = `<h1>404</h1><p class="muted">Writeup introuvable. <a href="index.html#writeups">Retour</a></p>`;
+    el.innerHTML = `<h2>NOM</h2><div class="body"><p>Pas de writeup « ${esc(id)} ». <a href="index.html#fichiers">Voir la liste</a>.</p></div>`;
     return;
   }
+  const manId = `${w.id.toUpperCase()}(1)`;
+  ["#wu-id", "#wu-id2", "#wu-id3"].forEach((s) => { $(s).textContent = manId; });
   document.title = `${w.title} · ${w.ctf}`;
+
   const res = await fetch(`writeups/${encodeURIComponent(w.id)}.md`, { cache: "no-cache" });
-  const md = res.ok ? await res.text() : "_Fichier du writeup introuvable._";
-  const html = DOMPurify.sanitize(marked.parse(md));
+  const md = res.ok ? await res.text() : "_Le fichier du writeup est introuvable._";
   el.innerHTML = `
-    <h1>${esc(w.title)}</h1>
-    <div class="writeup-meta">
-      <span class="tag">${esc(w.ctf)}</span>
-      <span class="tag">${esc(w.category)}</span>
-      <span class="tag">par ${esc(w.author)}</span>
-      <span class="tag">${fmtDate(w.date)}</span>
-    </div>
-    ${html}`;
+    <h2>NOM</h2>
+    <div class="body"><p><b>${esc(w.title)}</b> - ${esc(w.category)}, ${esc(w.ctf)}</p></div>
+    <h2>AUTEUR</h2>
+    <div class="body"><p>${esc(w.author)}, le ${iso(w.date)}</p></div>
+    <div class="body md">${DOMPurify.sanitize(marked.parse(md))}</div>`;
 }
 
 (async () => {
@@ -144,6 +140,6 @@ async function renderWriteup(writeups) {
   } catch (err) {
     console.error(err);
     document.querySelector("main").insertAdjacentHTML("afterbegin",
-      `<p style="color:var(--danger)">Erreur de chargement des données : ${esc(err.message)}</p>`);
+      `<p class="error">Impossible de charger les données : ${esc(err.message)}. Vérifie que le fichier JSON est valide.</p>`);
   }
 })();

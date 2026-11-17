@@ -1,23 +1,17 @@
 ## Énoncé
 
-> Un petit site de login, trouve le flag.
+> Colle ici l'énoncé du chall.
 
 ## Analyse
 
-En regardant le code source de la page, on trouve un commentaire :
-
-```html
-<!-- TODO: retirer /admin.php.bak -->
-```
+Ce que tu as remarqué en premier, les pistes qui n'ont rien donné.
 
 ## Exploitation
 
 ```bash
-curl http://chall.exemple.ctf/admin.php.bak
+# les commandes ou le script qui marchent
 ```
-
-Le backup contient le mot de passe admin en clair, on se connecte et on récupère le flag.
 
 ## Flag
 
-`EXEMPLE{c3ci_3st_un_3x3mpl3}`
+`FLAG{...}`

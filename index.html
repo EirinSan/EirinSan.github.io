@@ -3,79 +3,68 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Team CTF</title>
-  <meta name="description" content="Site de notre équipe CTF : membres, résultats et writeups.">
+  <title>0xLoliAttack</title>
+  <meta name="description" content="0xLoliAttack, team CTF francophone : membres, résultats et writeups.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-  <header class="nav">
-    <a class="brand" href="#top"><span class="prompt">$</span> <span data-team="name">team</span><span class="cursor">_</span></a>
-    <nav>
-      <a href="#about">about</a>
-      <a href="#members">membres</a>
-      <a href="#results">résultats</a>
-      <a href="#writeups">writeups</a>
-      <a href="#join">contact</a>
-    </nav>
+<div class="page">
+  <header class="manline top">
+    <span class="man-id">0XLOLIATTACK(7)</span>
+    <span>Manuel de la team</span>
+    <span class="man-id">0XLOLIATTACK(7)</span>
   </header>
 
-  <main id="top">
-    <section class="hero">
-      <p class="muted">root@ctf:~# cat banner.txt</p>
-      <h1 data-team="name">Team</h1>
-      <p class="tagline" data-team="tagline"></p>
-      <div class="stats">
-        <div><strong id="stat-ctfs">0</strong><span>CTFs joués</span></div>
-        <div><strong id="stat-members">0</strong><span>membres</span></div>
-        <div><strong id="stat-writeups">0</strong><span>writeups</span></div>
-        <div><strong id="stat-best">-</strong><span>meilleur classement</span></div>
-      </div>
-      <div class="cta">
-        <a class="btn" id="discord-link" href="#" target="_blank" rel="noopener">Rejoindre le Discord</a>
-        <a class="btn ghost" id="ctftime-link" href="#" target="_blank" rel="noopener">Profil CTFtime</a>
-      </div>
-    </section>
+  <main>
+    <h2 id="nom">NOM</h2>
+    <div class="body"><p><b data-team="name">0xLoliAttack</b> - <span data-team="tagline"></span></p></div>
 
-    <section id="about">
-      <h2><span class="hash">#</span> about</h2>
+    <h2 id="synopsis">SYNOPSIS</h2>
+    <div class="body">
+      <p class="synopsis"><b>0xloliattack</b>
+        [<a href="#auteurs"><span class="opt">--membres</span></a>]
+        [<a href="#historique"><span class="opt">--resultats</span></a>]
+        [<a href="#fichiers"><span class="opt">--writeups</span></a>]
+        [<a href="#contact"><span class="opt">--contact</span></a>]</p>
+    </div>
+
+    <h2 id="description">DESCRIPTION</h2>
+    <div class="body">
       <p data-team="about"></p>
-      <div class="tags" id="categories"></div>
-    </section>
+      <p>Catégories jouées : <span id="categories"></span>.</p>
+    </div>
 
-    <section id="members">
-      <h2><span class="hash">#</span> membres</h2>
-      <div class="grid" id="member-list"></div>
-    </section>
+    <h2 id="auteurs">AUTEURS</h2>
+    <div class="body"><dl id="member-list"></dl></div>
 
-    <section id="results">
-      <h2><span class="hash">#</span> résultats</h2>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Date</th><th>CTF</th><th>Place</th><th>Points</th></tr></thead>
-          <tbody id="result-list"></tbody>
-        </table>
-      </div>
-    </section>
+    <h2 id="historique">HISTORIQUE</h2>
+    <div class="body" id="results"></div>
 
-    <section id="writeups">
-      <h2><span class="hash">#</span> writeups</h2>
+    <h2 id="fichiers">FICHIERS</h2>
+    <div class="body">
+      <p class="dim">writeups/</p>
       <div class="filters" id="writeup-filters"></div>
-      <div class="list" id="writeup-list"></div>
-    </section>
+      <div class="ls scroll" id="writeup-list"></div>
+    </div>
 
-    <section id="join">
-      <h2><span class="hash">#</span> contact</h2>
-      <p data-team="join"></p>
-      <div class="cta" id="socials"></div>
-    </section>
+    <h2 id="contact">CONTACT</h2>
+    <div class="body"><p data-team="join"></p></div>
+
+    <h2 id="voir-aussi">VOIR AUSSI</h2>
+    <div class="body"><p id="see-also"></p></div>
+
+    <h2 id="bogues">BOGUES</h2>
+    <div class="body"><p data-team="bugs"></p></div>
   </main>
 
-  <footer>
-    <p class="muted">&copy; <span id="year"></span> <span data-team="name"></span> · hébergé sur GitHub Pages</p>
+  <footer class="manline bottom">
+    <span data-team="name">0xLoliAttack</span>
+    <span id="updated"></span>
+    <span class="man-id">0XLOLIATTACK(7)</span>
   </footer>
-
-  <script src="assets/main.js"></script>
+</div>
+<script src="assets/main.js"></script>
 </body>
 </html>

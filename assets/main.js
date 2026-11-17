@@ -36,17 +36,6 @@ function cls(b) {
   return "bx";
 }
 
-// 16 octets façon xxd (groupes de 2), la 2e moitié peut être masquée en CSS
-function hexCells(bytes) {
-  const cell = (i) => (i < bytes.length ? `<span class="${cls(bytes[i])}">${hex2(bytes[i])}</span>` : "  ");
-  const group = (from) => {
-    const parts = [];
-    for (let i = from; i < from + 8; i += 2) parts.push(cell(i) + cell(i + 1));
-    return parts.join(" ");
-  };
-  return `${group(0)}<span class="h2"> ${group(8)}</span>`;
-}
-
 /* ---------- lignes avec offset réel ---------- */
 
 class Dump {
@@ -54,33 +43,31 @@ class Dump {
 
   offset(n = this.off) {
     const h = hex8(n);
-    return `<span class="hi">${h.slice(0, 4)}</span>${h.slice(4)}:`;
+    return h.slice(4);
   }
 
   // plain = le texte dont on montre les octets ; html = ce qui est affiché
   row(plain, html, extra = "") {
     const bytes = enc.encode(plain);
-    const out = `<div class="row ${extra}"><span class="o">${this.offset()}</span><span class="h">${hexCells(bytes)}</span><div class="t">${html}</div></div>`;
+    const out = `<div class="row ${extra}"><span class="o">${this.offset()}</span><div class="t">${html}</div></div>`;
     this.off += bytes.length + 1;
     return out;
   }
 
   // une zone vide = mémoire à zéro, puis l'étoile de xxd pour les lignes répétées
   zeros(message) {
-    const z = this.row("\0".repeat(16), "", "zero");
+    const z = this.row("\0".repeat(16), `<span class="b0">00 00 00 00 00 00 00 00</span>`, "zero");
     this.off += 15;
-    return `${z}<div class="row star"><span class="o">*</span><span class="h"></span><div class="t">${esc(message)}</div></div>`;
+    return `${z}<div class="row star"><span class="o">*</span><div class="t">${esc(message)}</div></div>`;
   }
 }
 
 function sectionHtml(d, { id, name, build, count }) {
-  const start = d.off;
   const rows = build(d);
-  const size = d.off - start;
   return `
     <section class="sect" id="${id}">
       <h2 class="sect-head"><span class="name">.${esc(name)}</span>
-        <span class="meta">@ 0x${hex8(start)} · ${count} · ${size} octets</span>
+        <span class="meta">${count}</span>
         ${id === "writeups" ? `<span class="filters" id="filters"></span>` : ""}
       </h2>
       ${rows}
@@ -147,7 +134,7 @@ function renderHome(team, ctfs, writeups, filter) {
 
   const sections = [
     {
-      id: "about", name: "about", count: "texte",
+      id: "about", name: "about", count: "",
       build: (d) => [
         d.row(team.about, `<p>${esc(team.about)}</p>`),
         d.row(`categories: ${(team.categories || []).join(", ")}`,
@@ -179,7 +166,7 @@ function renderHome(team, ctfs, writeups, filter) {
         : d.zeros(filter ? `aucun writeup ${filter}` : "vide, les premiers writeups arrivent après le prochain CTF"),
     },
     {
-      id: "contact", name: "contact", count: "liens",
+      id: "contact", name: "contact", count: "",
       build: (d) => {
         const rows = [d.row(team.join, `<p>${esc(team.join)}</p>`)];
         const seen = new Set();

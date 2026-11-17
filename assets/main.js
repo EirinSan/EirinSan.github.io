@@ -25,16 +25,7 @@ const link = (url, label) => `<a href="${esc(url)}" target="_blank" rel="noopene
 
 /* ---------- octets ---------- */
 
-const hex2 = (b) => b.toString(16).padStart(2, "0");
 const hex8 = (n) => n.toString(16).padStart(8, "0");
-
-// mêmes familles que hexyl : nul, espace, imprimable, non-ASCII
-function cls(b) {
-  if (b === 0) return "b0";
-  if (b === 0x20 || b === 0x0a || b === 0x09 || b === 0x0d) return "bw";
-  if (b > 0x20 && b < 0x7f) return "bp";
-  return "bx";
-}
 
 /* ---------- lignes avec offset réel ---------- */
 
@@ -78,54 +69,19 @@ const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
 
 /* ---------- page d'accueil ---------- */
 
-function renderDump(team) {
-  const text = `${team.name}\n${team.tagline}\n`;
-  const bytes = enc.encode(text);
-  const width = matchMedia("(max-width: 640px)").matches ? 8 : 16;
-  const lines = [];
-  for (let off = 0; off < bytes.length; off += width) {
-    let hex = "";
-    let ascii = "";
-    for (let i = off; i < off + width; i++) {
-      if (i > off && (i - off) % 2 === 0) hex += " ";
-      if (i < bytes.length) {
-        const b = bytes[i];
-        hex += `<span class="${cls(b)}" data-b="${i}">${hex2(b)}</span>`;
-        const ch = b > 0x20 && b < 0x7f ? esc(String.fromCharCode(b)) : ".";
-        ascii += `<span class="a" data-b="${i}">${ch}</span>`;
-      } else {
-        hex += "  ";
-      }
-    }
-    lines.push(`<span class="o">${hex8(off)}:</span> ${hex}  ${ascii}`);
-  }
-  const dump = $("#dump");
-  dump.innerHTML = lines.join("\n");
-  dump.setAttribute("aria-label", text.replace(/\n/g, " ").trim());
-
-  let lit = [];
-  const probe = $("#probe");
-  dump.onpointerover = (e) => {
-    const t = e.target.closest("[data-b]");
-    lit.forEach((el) => el.classList.remove("hl"));
-    if (!t) return;
-    const i = +t.dataset.b;
-    lit = [...dump.querySelectorAll(`[data-b="${i}"]`)];
-    lit.forEach((el) => el.classList.add("hl"));
-    const b = bytes[i];
-    const what = b > 0x20 && b < 0x7f ? `'${String.fromCharCode(b)}'`
-      : b === 0x0a ? "\\n" : b === 0x20 ? "espace" : "octet UTF-8";
-    probe.innerHTML = `offset <b>0x${hex8(i)}</b> · 0x${hex2(b)} · ${b} · ${esc(what)}`;
-  };
-  dump.onpointerleave = () => {
-    lit.forEach((el) => el.classList.remove("hl"));
-    probe.textContent = "survole un octet";
-  };
+// le nom de la team écrit comme un flag : Nom{accroche_en_snake_case}
+function renderFlag(team) {
+  const body = (team.tagline || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+  $("#flag").innerHTML = `<span class="fl-name">${esc(team.name)}</span><span class="brace">{</span>`
+    + `<span class="fl-body">${esc(body).replace(/_/g, "_<wbr>")}</span><span class="brace">}</span>`;
+  $("#flag").setAttribute("aria-label", `${team.name}, ${team.tagline}`);
 }
 
 function renderHome(team, ctfs, writeups, filter) {
   const d = new Dump();
-  d.off = enc.encode(`${team.name}\n${team.tagline}\n`).length; // après le dump d'ouverture
+  d.off = enc.encode(`${team.name}\n${team.tagline}\n`).length; // après le titre
 
   const members = team.members || [];
   const results = [...ctfs].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -248,11 +204,10 @@ async function renderWriteup(writeups) {
       return;
     }
     document.title = team.name || document.title;
-    renderDump(team);
+    renderFlag(team);
     renderHome(team, ctfs, writeups, "");
     const updated = new Date(document.lastModified);
     if (!isNaN(updated)) $("#updated").textContent = `modifié le ${updated.toISOString().slice(0, 10)}`;
-    matchMedia("(max-width: 640px)").addEventListener("change", () => renderDump(team));
     if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
   } catch (err) {
     console.error(err);

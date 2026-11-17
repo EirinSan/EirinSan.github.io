@@ -1,6 +1,5 @@
-/* Mise en page : le site est un dump hexa (xxd). Chaque ligne a son offset
-   réel, les premiers octets de la ligne en hexa, puis le texte lisible.
-   Couleurs des octets comme hexyl : imprimable, espace, non-ASCII, nul. */
+/* Mise en page : en-tête en forme de flag, puis le contenu ligne par ligne
+   avec sa position en hexa dans la marge, façon fichier binaire. */
 :root {
   --bg: #eef0f3;
   --fg: #1b1d22;
@@ -70,21 +69,23 @@ a:hover { background: var(--hl); }
 .bp { color: var(--b-print); }
 .bx { color: var(--b-x); }
 
-/* le dump d'ouverture */
-.hero { padding-block: 48px 20px; }
-.dump {
-  font-family: var(--display);
-  font-size: clamp(13px, 2.1vw, 22px);
-  line-height: 1.7;
-  white-space: pre;
-  overflow-x: auto;
+/* titre : le nom de la team écrit comme un flag */
+.hero { padding-block: 64px 12px; }
+.flag {
+  margin: 0;
+  font: 700 clamp(30px, 6.4vw, 68px)/1.15 var(--display);
+  letter-spacing: -0.02em;
+  overflow-wrap: break-word;
 }
-.dump .o { color: var(--off); }
-.dump .a { color: var(--fg); font-weight: 700; }
-.dump span[data-b] { cursor: default; }
-.dump span.hl { background: var(--hl); color: var(--accent); }
-.probe { color: var(--off); font-size: 13px; margin-top: 10px; min-height: 1.6em; font-variant-numeric: tabular-nums; }
-.probe b { color: var(--accent); font-weight: 400; }
+.flag .brace { color: var(--accent); font-weight: 400; }
+.flag .fl-body {
+  font-weight: 400;
+  font-size: .5em;
+  letter-spacing: 0;
+  color: var(--off);
+  vertical-align: .18em;
+  padding-inline: .15em;
+}
 
 /* lignes de contenu */
 .sect { margin-top: 48px; }
@@ -137,9 +138,6 @@ footer .wrap { padding-block: 16px 32px; color: var(--off); font-size: 13px; dis
   .row { grid-template-columns: 5ch minmax(0, 1fr); gap: 0 1.5ch; }
   .bar nav { margin-left: 0; }
   .sect-head .filters { margin-left: 0; }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .dump span[data-b] { transition: background .08s; }
 }
 
 /* aération des blocs dans un writeup */

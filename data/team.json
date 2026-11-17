@@ -51,6 +51,18 @@
       ],
       "avatar": "",
       "links": {}
+    },
+    {
+      "name": "Ryosoba",
+      "role": "Captaine",
+      "specialties": [
+        "rev",
+        "net",
+        "osint"
+      ],
+      "avatar": "https://cdn.discordapp.com/avatars/602865002797596679/8a260e7d70846c7806d820074a21f386.png?size=128",
+      "links": {},
+      "discord_id": "602865002797596679"
     }
   ]
 }

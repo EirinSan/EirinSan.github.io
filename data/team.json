@@ -21,16 +21,6 @@
   },
   "members": [
     {
-      "name": "membre3",
-      "role": "Crypto",
-      "specialties": [
-        "crypto",
-        "misc"
-      ],
-      "avatar": "",
-      "links": {}
-    },
-    {
       "name": "Ryosoba",
       "role": "Captaine",
       "specialties": [

@@ -13,7 +13,7 @@ Site statique hébergé avec GitHub Pages. Pas de build : tout le contenu se mod
 
 ### Ajouter un writeup
 
-1. Crée `writeups/mon-ctf-nom-du-chall.md` et écris le writeup en Markdown.
+1. Copie `writeups/_modele.md` en `writeups/mon-ctf-nom-du-chall.md` et écris le writeup en Markdown.
 2. Ajoute une entrée dans `data/writeups.json` avec le même `id` :
 
 ```json

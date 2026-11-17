@@ -2,11 +2,32 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Writeup</title>
-  <script>
-    // Les writeups s'ouvrent maintenant dans une fenêtre du bureau.
-    location.replace("index.html" + (location.search || ""));
-  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=Martian+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
 </head>
-<body><a href="index.html">0xLoliAttack</a></body>
+<body>
+  <header class="bar">
+    <div class="wrap">
+      <span class="file" id="wu-file">writeups/</span>
+      <span class="size" id="size"></span>
+      <nav aria-label="Navigation"><a href="index.html#writeups">writeups</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap" id="main">
+    <div id="writeup"><p class="dim">lecture…</p></div>
+  </main>
+
+  <footer>
+    <div class="wrap"><span id="eof"></span><a href="index.html">0xLoliAttack</a></div>
+  </footer>
+
+  <script src="assets/vendor/marked.min.js"></script>
+  <script src="assets/vendor/purify.min.js"></script>
+  <script src="assets/main.js"></script>
+</body>
 </html>

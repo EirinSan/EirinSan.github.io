@@ -7,6 +7,7 @@ Site statique hébergé avec GitHub Pages. Pas de build : tout le contenu se mod
 | Fichier | Contenu |
 |---|---|
 | `data/team.json` | Nom de la team, textes (`tagline`, `about`, `join`, `bugs`), liens Discord / CTFtime, membres |
+| `data/upcoming.json` | Prochains CTF de la team (nom, `start`, `finish`, `url`, `ctftime`, `format`). Les CTF terminés disparaissent tout seuls. |
 | `data/ctfs.json` | Résultats des CTF (nom, date, place, nombre d'équipes, points) |
 | `data/writeups.json` | Liste des writeups |
 | `writeups/<id>.md` | Contenu d'un writeup en Markdown |

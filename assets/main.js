@@ -21,6 +21,38 @@ const iso = (d) => {
   return isNaN(date) ? esc(d) : date.toISOString().slice(0, 10);
 };
 const ordinal = (n) => (n === 1 ? "1er" : `${n}e`);
+
+// "2026-12-06" (jour seul, heure locale) ou "2026-12-06T18:00:00+00:00" (avec heure)
+const hasTime = (s) => typeof s === "string" && s.includes("T");
+function parseWhen(s) {
+  const m = !hasTime(s) && /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || "");
+  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(s);
+}
+function when(s) {
+  const d = parseWhen(s);
+  if (isNaN(d)) return esc(s);
+  const day = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+  return hasTime(s) ? `${day} ${d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}` : day;
+}
+const midnight = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+function countdown(start, finish) {
+  const now = new Date();
+  const s = parseWhen(start);
+  const f = finish ? parseWhen(finish) : new Date(midnight(s) + 86400000);
+  if (now >= s && now < f) return "en cours";
+  const hours = (s - now) / 3600000;
+  if (hasTime(start) && hours < 24) return `dans ${Math.max(1, Math.round(hours))} h`;
+  const days = Math.round((midnight(s) - midnight(now)) / 86400000);
+  if (days <= 0) return "aujourd'hui";
+  return days === 1 ? "demain" : `dans ${days} j`;
+}
+// un CTF reste dans l'agenda jusqu'à sa fin (ou la fin du jour de début)
+function isUpcoming(u) {
+  if (!u.start) return true;
+  const start = parseWhen(u.start);
+  const end = u.finish ? parseWhen(u.finish) : new Date(midnight(start) + 86400000);
+  return isNaN(end) || end.getTime() > Date.now();
+}
 const link = (url, label) => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>`;
 
 /* ---------- octets ---------- */
@@ -79,12 +111,14 @@ function renderFlag(team) {
   $("#flag").setAttribute("aria-label", `${team.name}, ${team.tagline}`);
 }
 
-function renderHome(team, ctfs, writeups, filter) {
+function renderHome(team, ctfs, writeups, upcoming, filter) {
   const d = new Dump();
   d.off = enc.encode(`${team.name}\n${team.tagline}\n`).length; // après le titre
 
   const members = team.members || [];
   const results = [...ctfs].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const agenda = upcoming.filter(isUpcoming)
+    .sort((a, b) => parseWhen(a.start || "9999-12-31") - parseWhen(b.start || "9999-12-31"));
   const wus = [...writeups].sort((a, b) => new Date(b.date) - new Date(a.date))
     .filter((w) => !filter || w.category === filter);
 
@@ -106,6 +140,16 @@ function renderHome(team, ctfs, writeups, filter) {
         return d.row(`${m.name} ${m.role}`,
           `<strong>${esc(m.name)}</strong> ${esc(m.role)}${spe ? ` <span class="dim">· ${esc(spe)}</span>` : ""}${links ? ` · ${links}` : ""}`);
       }).join("") : d.zeros("personne pour l'instant"),
+    },
+    {
+      id: "agenda", name: "agenda", count: `${agenda.length} à venir`,
+      build: (d) => agenda.length ? agenda.map((u) => {
+        const dates = u.start ? `${when(u.start)}${u.finish ? ` → ${when(u.finish)}` : ""}` : "date à venir";
+        const name = u.url ? link(u.url, u.name) : `<strong>${esc(u.name)}</strong>`;
+        const extra = [u.format, u.ctftime ? link(u.ctftime, "ctftime") : ""].filter(Boolean).join(" · ");
+        return d.row(`${u.start || ""} ${u.name}`,
+          `${u.start ? `<span class="tag">${esc(countdown(u.start, u.finish))}</span> ` : ""}${name} <span class="dim">· ${dates}</span>${extra ? ` <span class="dim">· ${extra}</span>` : ""}`);
+      }).join("") : d.zeros("aucun CTF prévu pour l'instant"),
     },
     {
       id: "resultats", name: "resultats", count: plural(results.length, "CTF", "CTF"),
@@ -151,7 +195,7 @@ function renderHome(team, ctfs, writeups, filter) {
     $("#filters").onclick = (e) => {
       const btn = e.target.closest("button");
       if (!btn) return;
-      renderHome(team, ctfs, writeups, btn.dataset.cat);
+      renderHome(team, ctfs, writeups, upcoming, btn.dataset.cat);
       $("#writeups").scrollIntoView({ block: "start" });
     };
   }
@@ -196,8 +240,9 @@ async function renderWriteup(writeups) {
 
 (async () => {
   try {
-    const [team, ctfs, writeups] = await Promise.all([
+    const [team, ctfs, writeups, upcoming] = await Promise.all([
       load("data/team.json"), load("data/ctfs.json"), load("data/writeups.json"),
+      load("data/upcoming.json").catch(() => []),
     ]);
     if ($("#writeup")) {
       await renderWriteup(writeups);
@@ -205,7 +250,7 @@ async function renderWriteup(writeups) {
     }
     document.title = team.name || document.title;
     renderFlag(team);
-    renderHome(team, ctfs, writeups, "");
+    renderHome(team, ctfs, writeups, upcoming, "");
     const updated = new Date(document.lastModified);
     if (!isNaN(updated)) $("#updated").textContent = `modifié le ${updated.toISOString().slice(0, 10)}`;
     if (location.hash) document.querySelector(location.hash)?.scrollIntoView();

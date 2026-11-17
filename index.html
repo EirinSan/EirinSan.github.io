@@ -2,80 +2,89 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Team CTF</title>
-  <meta name="description" content="Site de notre équipe CTF : membres, résultats et writeups.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>0xLoliAttack</title>
+  <meta name="description" content="0xLoliAttack, team CTF francophone : membres, résultats et writeups.">
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-  <header class="nav">
-    <a class="brand" href="#top"><span class="prompt">$</span> <span data-team="name">team</span><span class="cursor">_</span></a>
-    <nav>
-      <a href="#about">about</a>
-      <a href="#members">membres</a>
-      <a href="#results">résultats</a>
-      <a href="#writeups">writeups</a>
-      <a href="#join">contact</a>
-    </nav>
-  </header>
+<div id="desktop">
+  <nav class="icons" aria-label="Bureau">
+    <button class="icon" data-open="about"><i data-icon="txt"></i><span>lisezmoi.txt</span></button>
+    <button class="icon" data-open="members"><i data-icon="people"></i><span>Membres</span></button>
+    <button class="icon" data-open="writeups"><i data-icon="folder"></i><span>writeups</span></button>
+    <button class="icon" data-open="results"><i data-icon="trophy"></i><span>Résultats</span></button>
+    <button class="icon" data-open="contact"><i data-icon="mail"></i><span>Contact</span></button>
+    <a class="icon" id="ctftime-icon" href="#" target="_blank" rel="noopener"><i data-icon="flag"></i><span>CTFtime</span></a>
+    <button class="icon" data-open="bin"><i data-icon="bin"></i><span>Corbeille</span></button>
+  </nav>
 
-  <main id="top">
-    <section class="hero">
-      <p class="muted">root@ctf:~# cat banner.txt</p>
-      <h1 data-team="name">Team</h1>
-      <p class="tagline" data-team="tagline"></p>
-      <div class="stats">
-        <div><strong id="stat-ctfs">0</strong><span>CTFs joués</span></div>
-        <div><strong id="stat-members">0</strong><span>membres</span></div>
-        <div><strong id="stat-writeups">0</strong><span>writeups</span></div>
-        <div><strong id="stat-best">-</strong><span>meilleur classement</span></div>
-      </div>
-      <div class="cta">
-        <a class="btn" id="discord-link" href="#" target="_blank" rel="noopener">Rejoindre le Discord</a>
-        <a class="btn ghost" id="ctftime-link" href="#" target="_blank" rel="noopener">Profil CTFtime</a>
-      </div>
-    </section>
+  <section class="win" data-id="about" data-icon="txt" data-title="lisezmoi.txt - Bloc-notes" data-x="140" data-y="28" data-w="470">
+    <div class="pane in notepad" id="about-text"></div>
+  </section>
 
-    <section id="about">
-      <h2><span class="hash">#</span> about</h2>
-      <p data-team="about"></p>
-      <div class="tags" id="categories"></div>
-    </section>
+  <section class="win" data-id="members" data-icon="people" data-title="Membres" data-w="560">
+    <div class="pane in list" id="member-list"></div>
+    <div class="statusbar"><span id="member-count"></span><span>Clique sur un lien pour voir le profil</span></div>
+  </section>
 
-    <section id="members">
-      <h2><span class="hash">#</span> membres</h2>
-      <div class="grid" id="member-list"></div>
-    </section>
+  <section class="win" data-id="writeups" data-icon="folder" data-title="writeups" data-x="420" data-y="250" data-w="620">
+    <div class="toolbar">
+      <span>Adresse</span>
+      <span class="field in">C:\0xLoliAttack\writeups\</span>
+      <label for="wu-filter" class="sr">Catégorie</label>
+      <select class="field in" id="wu-filter"><option value="">Toutes les catégories</option></select>
+    </div>
+    <div class="pane in list" id="wu-list"></div>
+    <div class="statusbar"><span id="wu-count"></span><span>Double-clic inutile, un clic suffit</span></div>
+  </section>
 
-    <section id="results">
-      <h2><span class="hash">#</span> résultats</h2>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Date</th><th>CTF</th><th>Place</th><th>Points</th></tr></thead>
-          <tbody id="result-list"></tbody>
-        </table>
-      </div>
-    </section>
+  <section class="win" data-id="results" data-icon="trophy" data-title="Résultats" data-w="520">
+    <div class="pane in list" id="results-list"></div>
+    <div class="statusbar"><span id="results-count"></span><span id="results-best"></span></div>
+  </section>
 
-    <section id="writeups">
-      <h2><span class="hash">#</span> writeups</h2>
-      <div class="filters" id="writeup-filters"></div>
-      <div class="list" id="writeup-list"></div>
-    </section>
+  <section class="win" data-id="contact" data-icon="mail" data-title="Contact" data-w="400">
+    <div class="dialog"><i data-icon="mail"></i><div id="contact-text"></div></div>
+    <div class="actions" id="contact-actions"></div>
+  </section>
 
-    <section id="join">
-      <h2><span class="hash">#</span> contact</h2>
-      <p data-team="join"></p>
-      <div class="cta" id="socials"></div>
-    </section>
-  </main>
+  <section class="win" data-id="bin" data-icon="bin" data-title="Corbeille" data-w="420">
+    <div class="pane in list" id="bin-list"></div>
+    <div class="statusbar"><span>1 objet(s)</span><span id="bin-status"></span></div>
+  </section>
 
-  <footer>
-    <p class="muted">&copy; <span id="year"></span> <span data-team="name"></span> · hébergé sur GitHub Pages</p>
-  </footer>
+  <section class="win" data-id="reader" data-icon="txt" data-title="Lecteur" data-w="680">
+    <div class="pane in md" id="reader-body"></div>
+    <div class="statusbar"><span id="reader-cat"></span><span id="reader-meta"></span></div>
+  </section>
 
-  <script src="assets/main.js"></script>
+  <section class="win" data-id="shutdown" data-icon="warn" data-title="Arrêter" data-w="360">
+    <div class="dialog"><i data-icon="warn"></i><div><p>Impossible d'arrêter 0xLoliAttack.</p><p>Il reste sûrement un CTF en cours quelque part.</p></div></div>
+    <div class="actions"><button class="btn" data-act="close">OK</button></div>
+  </section>
+</div>
+
+<div class="startmenu out" id="startmenu" hidden>
+  <div class="side">0xLoliAttack</div>
+  <ul>
+    <li><button class="item" data-open="writeups"><i data-icon="folder" data-sm></i>Writeups</button></li>
+    <li><button class="item" data-open="members"><i data-icon="people" data-sm></i>Membres</button></li>
+    <li><button class="item" data-open="results"><i data-icon="trophy" data-sm></i>Résultats</button></li>
+    <li><button class="item" data-open="about"><i data-icon="txt" data-sm></i>Lisez-moi</button></li>
+    <li><button class="item" data-open="contact"><i data-icon="mail" data-sm></i>Contact</button></li>
+    <li class="sep"><button class="item" data-open="shutdown"><i data-icon="warn" data-sm></i>Arrêter…</button></li>
+  </ul>
+</div>
+
+<footer class="taskbar">
+  <button class="btn" id="start" aria-expanded="false" aria-controls="startmenu"><i data-icon="mark" data-sm></i>Démarrer</button>
+  <div class="tasks" id="tasks"></div>
+  <div class="tray" id="clock">--:--</div>
+</footer>
+
+<script src="assets/vendor/marked.min.js"></script>
+<script src="assets/vendor/purify.min.js"></script>
+<script src="assets/main.js"></script>
 </body>
 </html>

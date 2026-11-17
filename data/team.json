@@ -1,8 +1,9 @@
 {
   "name": "0xLoliAttack",
-  "tagline": "Équipe CTF francophone · on casse des trucs, on écrit des writeups.",
-  "about": "On est une team de passionnés de sécu qui participe à des CTF en ligne et en présentiel. On joue sur toutes les catégories et on partage nos solutions ici.",
-  "join": "Tu veux jouer avec nous ou nous contacter ? Retrouve-nous sur CTFtime ou GitHub.",
+  "tagline": "team CTF francophone, toutes catégories",
+  "about": "On est une petite team qui joue des CTF le soir et le week-end, surtout en ligne. Chacun a sa catégorie préférée, mais tout le monde finit par toucher à tout. Quand un chall nous a bien pris la tête, on écrit le writeup et on le met ici.",
+  "join": "On n'a pas encore de Discord public. En attendant, passe par notre page CTFtime ou ouvre une issue sur GitHub.",
+  "bugs": "Aucun first blood pour l'instant. On y travaille.",
   "discord": "",
   "ctftime": "https://ctftime.org/team/456372",
   "categories": [

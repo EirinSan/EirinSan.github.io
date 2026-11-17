@@ -21,16 +21,6 @@
   },
   "members": [
     {
-      "name": "membre2",
-      "role": "Pwn / Reverse",
-      "specialties": [
-        "pwn",
-        "reverse"
-      ],
-      "avatar": "",
-      "links": {}
-    },
-    {
       "name": "membre3",
       "role": "Crypto",
       "specialties": [

@@ -53,6 +53,8 @@ function isUpcoming(u) {
   const end = u.finish ? parseWhen(u.finish) : new Date(midnight(start) + 86400000);
   return isNaN(end) || end.getTime() > Date.now();
 }
+// extension du fichier d'un writeup : .md par défaut, .pdf si "type": "pdf"
+const wuExt = (w) => (w.type === "pdf" ? "pdf" : "md");
 const link = (url, label) => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>`;
 
 /* ---------- octets ---------- */
@@ -160,10 +162,25 @@ function renderHome(team, ctfs, writeups, upcoming, filter) {
       }).join("") : d.zeros("rien encore, le premier CTF arrive bientôt"),
     },
     {
-      id: "writeups", name: "writeups", count: plural(wus.length, "fichier", "fichiers"),
-      build: (d) => wus.length ? wus.map((w) => d.row(`${w.id}.md`,
-        `<a href="writeup.html?id=${encodeURIComponent(w.id)}">${esc(w.id)}.md</a> <span class="tag">${esc(w.category)}</span> <span class="dim">· ${esc(w.ctf)} · ${esc(w.author)} · ${iso(w.date)}</span>`)).join("")
-        : d.zeros(filter ? `aucun writeup ${filter}` : "vide, les premiers writeups arrivent après le prochain CTF"),
+      id: "writeups", name: "writeups",
+      count: `${plural(wus.length, "fichier", "fichiers")} · ${plural(new Set(wus.map((w) => w.ctf)).size, "CTF", "CTF")}`,
+      build: (d) => {
+        if (!wus.length) {
+          return d.zeros(filter ? `aucun writeup ${filter}` : "vide, les premiers writeups arrivent après le prochain CTF");
+        }
+        // un groupe par CTF (le plus récent en premier), challs triés par catégorie puis par nom
+        const groups = new Map();
+        wus.forEach((w) => {
+          if (!groups.has(w.ctf)) groups.set(w.ctf, []);
+          groups.get(w.ctf).push(w);
+        });
+        return [...groups].map(([ctf, items]) => {
+          items.sort((a, b) => (a.category || "").localeCompare(b.category || "") || a.title.localeCompare(b.title));
+          const head = d.row(`${ctf}/`, `<span class="ctf-dir">${esc(ctf)}/</span> <span class="dim">${plural(items.length, "chall", "challs")}</span>`, "dir");
+          return head + items.map((w) => d.row(`${w.id}.${wuExt(w)}`,
+            `<span class="indent"><a href="writeup.html?id=${encodeURIComponent(w.id)}">${esc(w.title)}</a> <span class="tag">${esc(w.category)}</span>${w.type === "pdf" ? ` <span class="dim">pdf</span>` : ""} <span class="dim">· ${esc(w.author)} · ${iso(w.date)}</span></span>`)).join("");
+        }).join("");
+      },
     },
     {
       id: "contact", name: "contact", count: "",
@@ -212,12 +229,15 @@ async function renderWriteup(writeups) {
     return;
   }
   document.title = `${w.title} · ${w.ctf}`;
-  $("#wu-file").textContent = `writeups/${w.id}.md`;
 
-  const res = await fetch(`writeups/${encodeURIComponent(w.id)}.md`, { cache: "no-cache" });
-  const md = res.ok ? await res.text() : "_Le fichier de ce writeup est introuvable._";
-  const tmp = document.createElement("div");
-  tmp.innerHTML = DOMPurify.sanitize(marked.parse(md));
+  $("#wu-file").textContent = `writeups/${w.id}.${wuExt(w)}`;
+  let tmp = null;
+  if (w.type !== "pdf") {
+    const res = await fetch(`writeups/${encodeURIComponent(w.id)}.md`, { cache: "no-cache" });
+    const md = res.ok ? await res.text() : "_Le fichier de ce writeup est introuvable._";
+    tmp = document.createElement("div");
+    tmp.innerHTML = DOMPurify.sanitize(marked.parse(md));
+  }
 
   const d = new Dump();
   const head = [
@@ -226,11 +246,22 @@ async function renderWriteup(writeups) {
     d.row(`auteur: ${w.author}`, `<span class="dim">auteur :</span> ${esc(w.author)}`),
     d.row(`date: ${iso(w.date)}`, `<span class="dim">date :</span> ${iso(w.date)}`),
   ].join("");
-  const body = [...tmp.children].map((node) => d.row(node.textContent.trim(), node.outerHTML)).join("");
+  let body;
+  if (tmp) {
+    body = `<section class="sect md">${[...tmp.children].map((node) => d.row(node.textContent.trim(), node.outerHTML)).join("")}</section>`;
+  } else {
+    const pdf = `writeups/${encodeURIComponent(w.id)}.pdf`;
+    body = `<section class="sect">
+      ${d.row("pdf", `<a class="btn-pdf" href="${pdf}" download>télécharger le PDF</a> <a href="${pdf}" target="_blank" rel="noopener">ouvrir dans un onglet</a>`)}
+      <object class="pdf" data="${pdf}" type="application/pdf" aria-label="Writeup en PDF">
+        <p class="dim">Ton navigateur n'affiche pas les PDF ici. <a href="${pdf}" target="_blank" rel="noopener">Ouvre le fichier</a>.</p>
+      </object>
+    </section>`;
+  }
 
   el.innerHTML = `<h1 class="wu-title">${esc(w.title)}</h1>
     <section class="sect">${head}</section>
-    <section class="sect md">${body}</section>`;
+    ${body}`;
   el.querySelectorAll(".md a").forEach((a) => { a.target = "_blank"; a.rel = "noopener"; });
   $("#size").textContent = `${d.off} octets`;
   $("#eof").textContent = `EOF @ 0x${hex8(d.off)}`;

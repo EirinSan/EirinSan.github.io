@@ -1,6 +1,6 @@
 # Site de la team CTF
 
-Site statique hébergé avec GitHub Pages. Pas de build : tout le contenu se modifie dans `data/` et `writeups/`.
+Site statique hébergé avec GitHub Pages. Pas de build : tout le contenu se modifie dans `data/`, à la main ou avec le bot Discord. Les writeups ne sont pas publiés ici : ils restent privés dans le Discord de la team.
 
 ## Modifier le contenu
 
@@ -9,24 +9,6 @@ Site statique hébergé avec GitHub Pages. Pas de build : tout le contenu se mod
 | `data/team.json` | Nom de la team, textes (`tagline`, `about`, `join`, `bugs`), liens Discord / CTFtime, membres |
 | `data/upcoming.json` | Prochains CTF de la team (nom, `start`, `finish`, `url`, `ctftime`, `format`). Les CTF terminés disparaissent tout seuls. |
 | `data/ctfs.json` | Résultats des CTF (nom, date, place, nombre d'équipes, points) |
-| `data/writeups.json` | Liste des writeups |
-| `writeups/<id>.md` ou `writeups/<id>.pdf` | Contenu d'un writeup, en Markdown ou en PDF (`"type": "pdf"` dans `data/writeups.json`) |
-
-### Ajouter un writeup
-
-1. Copie `writeups/_modele.md` en `writeups/mon-ctf-nom-du-chall.md` et écris le writeup en Markdown.
-2. Ajoute une entrée dans `data/writeups.json` avec le même `id` :
-
-```json
-{
-  "id": "mon-ctf-nom-du-chall",
-  "title": "Nom du chall",
-  "ctf": "Mon CTF 2026",
-  "category": "pwn",
-  "author": "pseudo",
-  "date": "2026-11-17"
-}
-```
 
 ### Ajouter un membre
 

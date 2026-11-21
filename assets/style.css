@@ -144,3 +144,16 @@ footer .wrap { padding-block: 16px 32px; color: var(--off); font-size: 13px; dis
 .md .row { padding-block: 5px; }
 .md .row:has(h1, h2, h3) { margin-top: 18px; }
 .md .row:first-child { margin-top: 0; }
+
+/* writeups groupés par CTF */
+.row.dir { margin-top: 10px; }
+.row.dir:first-of-type { margin-top: 0; }
+.ctf-dir { font-weight: 700; }
+.indent { display: block; padding-left: 2ch; }
+
+/* writeup en PDF */
+.pdf { display: block; width: 100%; height: 80vh; margin-top: 12px; border: 1px solid var(--rule); background: var(--bg); }
+.btn-pdf { font-weight: 700; margin-right: 2ch; }
+@media (max-width: 640px) {
+  .pdf { height: 70vh; }
+}

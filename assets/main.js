@@ -1,4 +1,4 @@
-// Tout le contenu du site vient des fichiers dans /data et /writeups
+// Tout le contenu du site vient des fichiers dans /data
 // (modifiés à la main ou par le bot Discord). Pas besoin de toucher à ce fichier.
 
 const $ = (sel) => document.querySelector(sel);
@@ -53,8 +53,6 @@ function isUpcoming(u) {
   const end = u.finish ? parseWhen(u.finish) : new Date(midnight(start) + 86400000);
   return isNaN(end) || end.getTime() > Date.now();
 }
-// extension du fichier d'un writeup : .md par défaut, .pdf si "type": "pdf"
-const wuExt = (w) => (w.type === "pdf" ? "pdf" : "md");
 const link = (url, label) => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>`;
 
 /* ---------- octets ---------- */
@@ -93,7 +91,6 @@ function sectionHtml(d, { id, name, build, count }) {
     <section class="sect" id="${id}">
       <h2 class="sect-head"><span class="name">.${esc(name)}</span>
         <span class="meta">${count}</span>
-        ${id === "writeups" ? `<span class="filters" id="filters"></span>` : ""}
       </h2>
       ${rows}
     </section>`;
@@ -113,7 +110,7 @@ function renderFlag(team) {
   $("#flag").setAttribute("aria-label", `${team.name}, ${team.tagline}`);
 }
 
-function renderHome(team, ctfs, writeups, upcoming, filter) {
+function renderHome(team, ctfs, upcoming) {
   const d = new Dump();
   d.off = enc.encode(`${team.name}\n${team.tagline}\n`).length; // après le titre
 
@@ -121,9 +118,6 @@ function renderHome(team, ctfs, writeups, upcoming, filter) {
   const results = [...ctfs].sort((a, b) => new Date(b.date) - new Date(a.date));
   const agenda = upcoming.filter(isUpcoming)
     .sort((a, b) => parseWhen(a.start || "9999-12-31") - parseWhen(b.start || "9999-12-31"));
-  const wus = [...writeups].sort((a, b) => new Date(b.date) - new Date(a.date))
-    .filter((w) => !filter || w.category === filter);
-
   const sections = [
     {
       id: "about", name: "about", count: "",
@@ -162,27 +156,6 @@ function renderHome(team, ctfs, writeups, upcoming, filter) {
       }).join("") : d.zeros("rien encore, le premier CTF arrive bientôt"),
     },
     {
-      id: "writeups", name: "writeups",
-      count: `${plural(wus.length, "fichier", "fichiers")} · ${plural(new Set(wus.map((w) => w.ctf)).size, "CTF", "CTF")}`,
-      build: (d) => {
-        if (!wus.length) {
-          return d.zeros(filter ? `aucun writeup ${filter}` : "vide, les premiers writeups arrivent après le prochain CTF");
-        }
-        // un groupe par CTF (le plus récent en premier), challs triés par catégorie puis par nom
-        const groups = new Map();
-        wus.forEach((w) => {
-          if (!groups.has(w.ctf)) groups.set(w.ctf, []);
-          groups.get(w.ctf).push(w);
-        });
-        return [...groups].map(([ctf, items]) => {
-          items.sort((a, b) => (a.category || "").localeCompare(b.category || "") || a.title.localeCompare(b.title));
-          const head = d.row(`${ctf}/`, `<span class="ctf-dir">${esc(ctf)}/</span> <span class="dim">${plural(items.length, "chall", "challs")}</span>`, "dir");
-          return head + items.map((w) => d.row(`${w.id}.${wuExt(w)}`,
-            `<span class="indent"><a href="writeup.html?id=${encodeURIComponent(w.id)}">${esc(w.title)}</a> <span class="tag">${esc(w.category)}</span>${w.type === "pdf" ? ` <span class="dim">pdf</span>` : ""} <span class="dim">· ${esc(w.author)} · ${iso(w.date)}</span></span>`)).join("");
-        }).join("");
-      },
-    },
-    {
       id: "contact", name: "contact", count: "",
       build: (d) => {
         const rows = [d.row(team.join, `<p>${esc(team.join)}</p>`)];
@@ -204,84 +177,19 @@ function renderHome(team, ctfs, writeups, upcoming, filter) {
   $("#size").textContent = `${d.off} octets`;
   $("#eof").textContent = `EOF @ 0x${hex8(d.off)}`;
 
-  // filtres des writeups
-  const cats = [...new Set(writeups.map((w) => w.category).filter(Boolean))].sort();
-  if (cats.length > 1) {
-    $("#filters").innerHTML = ["", ...cats].map((c) =>
-      `<button type="button" data-cat="${esc(c)}" aria-pressed="${c === (filter || "")}">${esc(c || "tout")}</button>`).join("");
-    $("#filters").onclick = (e) => {
-      const btn = e.target.closest("button");
-      if (!btn) return;
-      renderHome(team, ctfs, writeups, upcoming, btn.dataset.cat);
-      $("#writeups").scrollIntoView({ block: "start" });
-    };
-  }
-}
-
-/* ---------- page writeup ---------- */
-
-async function renderWriteup(writeups) {
-  const el = $("#writeup");
-  const id = new URLSearchParams(location.search).get("id");
-  const w = writeups.find((x) => x.id === id);
-  if (!w) {
-    el.innerHTML = `<h1 class="wu-title">introuvable</h1><p>Pas de writeup « ${esc(id)} ». <a href="index.html#writeups">Voir la liste</a>.</p>`;
-    return;
-  }
-  document.title = `${w.title} · ${w.ctf}`;
-
-  $("#wu-file").textContent = `writeups/${w.id}.${wuExt(w)}`;
-  let tmp = null;
-  if (w.type !== "pdf") {
-    const res = await fetch(`writeups/${encodeURIComponent(w.id)}.md`, { cache: "no-cache" });
-    const md = res.ok ? await res.text() : "_Le fichier de ce writeup est introuvable._";
-    tmp = document.createElement("div");
-    tmp.innerHTML = DOMPurify.sanitize(marked.parse(md));
-  }
-
-  const d = new Dump();
-  const head = [
-    d.row(`ctf: ${w.ctf}`, `<span class="dim">ctf :</span> ${esc(w.ctf)}`),
-    d.row(`categorie: ${w.category}`, `<span class="dim">catégorie :</span> <span class="tag">${esc(w.category)}</span>`),
-    d.row(`auteur: ${w.author}`, `<span class="dim">auteur :</span> ${esc(w.author)}`),
-    d.row(`date: ${iso(w.date)}`, `<span class="dim">date :</span> ${iso(w.date)}`),
-  ].join("");
-  let body;
-  if (tmp) {
-    body = `<section class="sect md">${[...tmp.children].map((node) => d.row(node.textContent.trim(), node.outerHTML)).join("")}</section>`;
-  } else {
-    const pdf = `writeups/${encodeURIComponent(w.id)}.pdf`;
-    body = `<section class="sect">
-      ${d.row("pdf", `<a class="btn-pdf" href="${pdf}" download>télécharger le PDF</a> <a href="${pdf}" target="_blank" rel="noopener">ouvrir dans un onglet</a>`)}
-      <object class="pdf" data="${pdf}" type="application/pdf" aria-label="Writeup en PDF">
-        <p class="dim">Ton navigateur n'affiche pas les PDF ici. <a href="${pdf}" target="_blank" rel="noopener">Ouvre le fichier</a>.</p>
-      </object>
-    </section>`;
-  }
-
-  el.innerHTML = `<h1 class="wu-title">${esc(w.title)}</h1>
-    <section class="sect">${head}</section>
-    ${body}`;
-  el.querySelectorAll(".md a").forEach((a) => { a.target = "_blank"; a.rel = "noopener"; });
-  $("#size").textContent = `${d.off} octets`;
-  $("#eof").textContent = `EOF @ 0x${hex8(d.off)}`;
 }
 
 /* ---------- démarrage ---------- */
 
 (async () => {
   try {
-    const [team, ctfs, writeups, upcoming] = await Promise.all([
-      load("data/team.json"), load("data/ctfs.json"), load("data/writeups.json"),
+    const [team, ctfs, upcoming] = await Promise.all([
+      load("data/team.json"), load("data/ctfs.json"),
       load("data/upcoming.json").catch(() => []),
     ]);
-    if ($("#writeup")) {
-      await renderWriteup(writeups);
-      return;
-    }
     document.title = team.name || document.title;
     renderFlag(team);
-    renderHome(team, ctfs, writeups, upcoming, "");
+    renderHome(team, ctfs, upcoming);
     const updated = new Date(document.lastModified);
     if (!isNaN(updated)) $("#updated").textContent = `modifié le ${updated.toISOString().slice(0, 10)}`;
     if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
